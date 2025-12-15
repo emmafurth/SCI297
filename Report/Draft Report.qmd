@@ -1,0 +1,91 @@
+---
+title: "Homelessness and Geographic Crosswalks"
+format: html
+---
+
+# Intro
+
+[TODO: Build this out later]
+
+
+# Background
+
+## Annual Homelessness Assessment Report (AHAR)
+
+In 2001, Congress directed the US Department of Housing and Urban Development (HUD) to assist local communities in gathering data on homeless populations across the country. The first Annual Homelessness Assessment Report (AHAR) was published in 2007, and has done so yearly ever since. 
+
+Each year's report consist of two main datasets: Point-in-Time (PIT) counts, which track the total number of sheltered and unsheltered homeless individuals (in addition to other associated demographic data), and Housing Inventory Counts (HIC), which track the number of beds available to shelter homeless individuals. (TODO: Cite O'Flaherty, AHAR 2024) Of these, PIT counts are the ones we will be primarily focusing on in this report.
+
+```{r}
+
+## TODO: Insert some graphs showing PIT trends here
+
+```
+
+The basic geographic unit of the dataset is the Continuum of Care (CoC). AHAR defines a CoC as "local planning bodies responsible for coordinating the full range of homelessness services in a geographic area, which may cover a city, county, metropolitan area, or an entire state." (TODO: Cite AHAR 2024 pt 1)
+
+```{r}
+
+## TODO: Map of CoCs nationwide. Maybe make it a choropleth?  
+
+```
+# The Crosswalk
+
+## Correlating AHAR Data with Census Data
+
+Because CoC very boundaries are so irregular, it is difficult to obtain measurements for them that are not directly gathered in the AHAR report. Even measurements as basic as total population count are hard to come by at the CoC level. Since CoCs vary so widely in size, this makes it difficult to put PIT counts into perspective.
+
+Byrne et al (TODO: CITE) were the first to attempt to solve this problem, by creating a geographic crosswalk to match counties with CoCs. The code that performs the crosswalk can be found here (link to github: https://github.com/tomhbyrne/HUD-CoC-Geography-Crosswalk) (TODO: CITE). 
+
+### How the crosswalk works
+
+The tricky thing about matching CoCs and counties is that it is not a simple 1-to-1 relationship, or even a 1-to-many relationship. Some CoCs contain multiple counties, while some counties contain multiple CoCs. To match them, Byrne et al used census tract centroids.
+
+Census tracts are a geographic subdivision of counties, determined by the Census Bureau for the purposes of presenting data (TODO: CITE) (Sources: https://www.census.gov/glossary/?term=Census+tract, https://www.census.gov/content/dam/Census/library/publications/2020/acs/acs_geography_handbook_2020.pdf). Byrne et al start their crosswalk by matching census tracts with CoCs. They do this by calculating the centroid of each tract and seeing which CoC it intersects with; in cases where the tract centroid is not contained with in the tract itself (e.g. if the tract is a crescent shape), then a random point within the polygon is used instead. 
+
+```{r}
+ ## TODO: Insert sample dataframe of coc_county_match.csv
+```
+
+Once each tract has been matched with a CoC, Byrne et al then aggregate the data to the county level to determine the overall population, as well as what percentage of the county population is contained within a CoC. Thus, it becomes possible to map homeless rates to population numbers.
+
+```{r}
+## TODO: insert choropleth of homelessness vs population for 2017
+```
+
+### Updating the crosswalk to 2024
+
+A lot has changed since then. (TODO: list some examples; new Census has been done, pandemic happened, homeless populations stopped decreasing & started increasing). Unfortunately, it is not possible to run Byrne et al's code as is on 2024 data. Three of the R packages it used (rgdal, maptools, and rgeos) were discontinued in 2022, and so significant rewriting was required. You can find my updated code here: (TODO: CITE https://github.com/emmafurth/HUD-CoC-Geography-Crosswalk).
+
+My goal with the rewrite was two-fold: first, to reproduce Byrne et al's results using the same inputs, as identically as possible. Second, to then run the same code on 2024 data, and see what has changed in the last eight years.
+
+### Reproducing 2017 Data
+
+Below is a table comparing my 2017 CoC population numbers with Byrne et al's original results. Unfortunately, the results are not perfectly identical.
+
+```{r}
+## TODO: insert dataframe for comparing Byrne's original coc_population.csv with mine
+
+```
+
+Due to lack of time, I was not fully able to determine where the differences come from. What brief I analysis I had time for suggested that imprecision in the shapefile definitions may be a factor. For example: at the outset, the crosswalk is supposed to exclude census tracts that do not overlap any CoC, but I found a few instances where tracts that share a border with a CoC were erroneously identified as overlapping. Filtering these out was not a simple matter, however: I found other places where CoC boundaries are mostly coterminous with county/census tract boundaries, except for a few deviations that were clearly intentional.
+
+```{r}
+## TODO: include pictures of weird boundary overlaps in arcmap
+```
+
+On the whole, however, my population counts were quite close to Byrne's results. None were more than (TODO: insert % figure) different, and so I am comfortable using the results of this code for analysis. 
+
+### 2024 Data
+
+```{r}
+
+## TODO: Choropleth showing 2024 homelessness vs pop
+```
+
+```{r}
+## TODO: Choropleth showing pct change in homeless levels between 2017 and 2024
+```
+
+
+
