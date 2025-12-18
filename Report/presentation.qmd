@@ -1,6 +1,7 @@
 ---
 title: "Homelessness and Geographic Crosswalks"
 author: "Emma Furth"
+bibliography: references.bib
 format: revealjs
 editor: visual
 incremental: true
@@ -62,18 +63,22 @@ cocs_2024 <- cocs_2024 |> inner_join(pit_2024_df, by=join_by(COCNUM == CoC.Numbe
 
 ## Annual Homelessness Assessment Report (AHAR)
 
--   Published by HUD
--   Systematically tracks homeless populations in the US
--   Began in 2007
--   Published every year since
+Systematically tracks homeless population data in the US
+
+Began in 2007
+
+Conducted by HUD
 
 ## Data comes in two parts
 
--   Point in Time (PIT) Counts
-    -   track the total number of sheltered and unsheltered homeless individuals
-    -   Also gathers demographic data about homeless populations (race, age, family status, etc.)
--   Housing Inventory Counts (HIC)
-    -   track number of beds available
+Point in Time (PIT) Counts
+
+    track the total number of sheltered and unsheltered homeless individuals
+    
+    Also gathers demographic data about homeless populations (race, age, family status, etc.)
+
+Housing Inventory Counts (HIC)
+    track number of beds available
 
 ## PIT Trends Since 2007
 
@@ -96,23 +101,27 @@ ggplot(pit_by_year_df,aes(x=Year, y = Count, colour = Count.Type)) +
 *local planning bodies responsible for coordinating the full range of homelessness services in a geographic area, which may cover a city, county, metropolitan area, or an entire state*
 :::
 
--   The basic geographic unit of AHAR data
--   Can be a county, city, or even an entire state
--   Do NOT have any general population or demographic data
+The basic geographic unit of AHAR data
+
+Can be a county, city, or even an entire state
+
+Report does NOT include other demographic data about CoCs (e.g.: population)
 
 ![PIT Counts, 2024](images/pit_count_2024.jpg)
 
 ## Solution: Geographic Crosswalks
 
--   Crosswalks: a method for matching data from one set of geographic units to another, overlapping set
--   Examples: Congressional Districts to Counties
--   Census data is recorded by census tracts; by creating a crosswalk between the two, we can determine overall population counts for CoCs
+Crosswalks are a method for matching data from one set of geographic units to another, overlapping set
+
+Examples: Congressional Districts to Counties
+
+Census data is recorded by census tracts; by creating a crosswalk between the two, we can determine overall population counts for CoCs
 
 ## 
 
-Good news: a crosswalk for CoCs and Census Tracts exists!
+@byrne2013 produced a crosswalk matching CoCs and Census Tracts using centroids 
 
-Bad news: it was last updated in 2017; code is available, but uses defunct libraries and can not be rerun
+Unfortunately it was last updated in 2017; code is available, but uses defunct libraries and can not be rerun
 
 ```{r}
 tract_coc_match_2017_df <- read.csv("data/output_2017/tract_coc_match.csv")
@@ -122,6 +131,40 @@ tract_coc_match_2017_df |>
 
 ```
 
-## Data in context
+## Step 1: Recreate the 2017 Data
+
+```{r}
+
+coc_population_comparison_df <- read.csv("data/output_comparison/coc_population_COMPARISON.csv")
+
+coc_population_comparison_df <- coc_population_comparison_df |>
+  mutate(pop_diff = abs(total_population_DIFF))
+
+
+coc_population_comparison_df <- coc_population_comparison_df |>
+  mutate(pop_diff_bin = case_when(pop_diff == 0 ~ "0%",
+                                  pop_diff < 1 ~ "0-1%",
+                                  pop_diff < 5 ~ "1-5%",
+                                  pop_diff < 10 ~ "5-10%",
+                                  .default = ">10%")) |>
+  mutate(pop_diff_bin = factor(pop_diff_bin, levels = c("0%", "0-1%", "1-5%", "5-10%", ">10%")))
+
+ggplot(coc_population_comparison_df, aes(x=pop_diff_bin)) +
+  geom_bar()+
+  xlab("% Difference in Total Population")
+
+```
+
+##
 
 ![PIT Counts per 100k Population, 2017](images/pit_count_per_100k_2017.jpg)
+
+## Step 2: Running on 2024 Data
+
+![PIT Counts per 100k Population, 2024](images/pit_count_per_100k_2024.jpg)
+
+## What's Changed?
+
+![% Change in PIT Counts per 100k, 2017-2024](images/pit_count_per_100k__pct_change.jpg)
+
+## References
