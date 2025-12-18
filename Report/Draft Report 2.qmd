@@ -65,8 +65,6 @@ cocs_2024 <- cocs_2024 |> inner_join(pit_2024_df, by=join_by(COCNUM == CoC.Numbe
 ```
 
 
-
-
 In 2001, Congress directed the US Department of Housing and Urban Development (HUD) to assist local communities in gathering data on homeless populations across the country. The first Annual Homelessness Assessment Report (AHAR) was published in 2007, and has done so yearly ever since. 
 
 Each year's report consist of two main datasets: Point-in-Time (PIT) counts, which track the total number of sheltered and unsheltered homeless individuals (in addition to other associated demographic data), and Housing Inventory Counts (HIC), which track the number of beds available to shelter homeless individuals. (TODO: Cite O'Flaherty, AHAR 2024) Of these, PIT counts are the ones we will be primarily focusing on in this report.
@@ -85,22 +83,28 @@ ggplot(pit_by_year_df,aes(x=Year, y = Count, colour = Count.Type)) +
 The basic geographic unit of the dataset is the Continuum of Care (CoC). AHAR defines a CoC as "local planning bodies responsible for coordinating the full range of homelessness services in a geographic area, which may cover a city, county, metropolitan area, or an entire state." (TODO: Cite AHAR 2024 pt 1)
 
 ```{r message=FALSE}
-cuts <- as.integer(quantile(cocs_2024$Overall.Homeless, probs = seq(0,1,(1/6))))
 
-zoomLevel <- 4
+## Commenting this out and replacing with a still image of resulting map for performance reasons
 
-pal <- colorBin(palette = "Blues", domain = cocs_2024$Overall.Homeless, bins = cuts)
-leaflet(cocs_2024, options = leafletOptions(zoomControl = FALSE, minZoom = zoomLevel, maxZoom = zoomLevel)) |>
-  setMaxBounds(lng1 = -125.0011, lat1 = 24.9493, lng2 = -66.9326, lat2 = 49.5904) |>
-  # setView(lng = -103.771556, lat = 44.967243, zoom = zoomLevel) |>
-  addProviderTiles("Esri.WorldStreetMap") |>
-  addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1, color = ~pal(Overall.Homeless)) |>
-  addLegend("bottomright", pal = pal, values = ~Overall.Homeless,
-    title = "PIT Count",
-    opacity = 1
-  )
+# cuts <- as.integer(quantile(cocs_2024$Overall.Homeless, probs = seq(0,1,(1/6))))
+# 
+# zoomLevel <- 4
+# 
+# pal <- colorBin(palette = "Blues", domain = cocs_2024$Overall.Homeless, bins = cuts)
+# leaflet(cocs_2024, options = leafletOptions(zoomControl = FALSE, minZoom = zoomLevel, maxZoom = zoomLevel)) |>
+#   setMaxBounds(lng1 = -125.0011, lat1 = 24.9493, lng2 = -66.9326, lat2 = 49.5904) |>
+#   # setView(lng = -103.771556, lat = 44.967243, zoom = zoomLevel) |>
+#   addProviderTiles("Esri.WorldStreetMap") |>
+#   addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1, color = ~pal(Overall.Homeless)) |>
+#   addLegend("bottomright", pal = pal, values = ~Overall.Homeless,
+#     title = "PIT Count",
+#     opacity = 1
+#   )
 
 ```
+
+![PIT Counts, 2024](images/pit_count_2024.jpg)
+
 # The Crosswalk
 
 ## Correlating AHAR Data with Census Data
@@ -125,30 +129,31 @@ county_coc_match_2017_df
 Once each tract has been matched with a CoC, Byrne et al then aggregate the data to the county level to determine the overall population, as well as what percentage of the county population is contained within a CoC. Thus, it becomes possible to map homeless rates to population numbers.
 
 ```{r}
-## TODO: insert choropleth of homelessness vs population for 2017
 
 coc_population_2017_df <- read.csv("data/output_2017/coc_population.csv")
 
-cocs_2017 <- cocs_2017 |>
+coc_population_2017_df <- cocs_2017 |>
   inner_join(coc_population_2017_df, by = join_by(COCNUM == coc_number)) |>
   mutate(HomelessPer100K = (Overall.Homeless / total_population)*100000)
 ```
 
 ```{r message = FALSE, warning=FALSE}
-cuts <- as.integer(quantile(cocs_2017$HomelessPer100K, probs = seq(0,1,(1/6)), na.rm = TRUE))
-
-zoomLevel <- 4
-
-pal <- colorBin(palette = "Blues", domain = cocs_2017$HomelessPer100K, bins = cuts)
-leaflet(cocs_2017, options = leafletOptions(zoomControl = FALSE, minZoom = zoomLevel, maxZoom = zoomLevel)) |>
-  setMaxBounds(lng1 = -125.0011, lat1 = 24.9493, lng2 = -66.9326, lat2 = 49.5904) |>
-  addProviderTiles("Esri.WorldStreetMap") |>
-  addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1, color = ~pal(HomelessPer100K)) |>
-  addLegend("bottomright", pal = pal, values = ~HomelessPer100K,
-    title = "PIT Count per 100k",
-    opacity = 1
-  )
+# cuts <- as.integer(quantile(coc_population_2017_df$HomelessPer100K, probs = seq(0,1,(1/6)), na.rm = TRUE))
+# 
+# zoomLevel <- 4
+# 
+# pal <- colorBin(palette = "Blues", domain = coc_population_2017_df$HomelessPer100K, bins = cuts)
+# leaflet(coc_population_2017_df, options = leafletOptions(zoomControl = FALSE, minZoom = zoomLevel, maxZoom = zoomLevel)) |>
+#   setMaxBounds(lng1 = -125.0011, lat1 = 24.9493, lng2 = -66.9326, lat2 = 49.5904) |>
+#   addProviderTiles("Esri.WorldStreetMap") |>
+#   addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1, color = ~pal(HomelessPer100K)) |>
+#   addLegend("bottomright", pal = pal, values = ~HomelessPer100K,
+#     title = "PIT Count per 100k",
+#     opacity = 1
+#   )
 ```
+
+![PIT Counts per 100k Population, 2017](images/pit_count_per_100k_2017.jpg)
 
 ### Updating the crosswalk to 2024
 
@@ -161,7 +166,6 @@ My goal with the rewrite was two-fold: first, to reproduce Byrne et al's results
 Below is a table comparing my 2017 CoC population numbers with Byrne et al's original results. Unfortunately, the results are not perfectly identical.
 
 ```{r}
-## TODO: insert dataframe for comparing Byrne's original coc_population.csv with mine
 
 coc_population_comparison_df <- read.csv("data/output_comparison/coc_population_COMPARISON.csv")
 
@@ -185,6 +189,7 @@ ggplot(coc_population_comparison_df, aes(x=pop_diff_bin)) +
 
 ```
 
+
 Due to lack of time, I was not fully able to determine where the differences come from. What brief I analysis I had time for suggested that imprecision in the shapefile definitions may be a factor. For example: at the outset, the crosswalk is supposed to exclude census tracts that do not overlap any CoC, but I found a few instances where tracts that share a border with a CoC were erroneously identified as overlapping. Filtering these out was not a simple matter, however: I found other places where CoC boundaries are mostly coterminous with county/census tract boundaries, except for a few deviations that were clearly intentional.
 
 ```{r}
@@ -197,55 +202,54 @@ On the whole, however, my population counts were quite close to Byrne's results.
 
 ```{r}
 
-## TODO: Choropleth showing 2024 homelessness vs pop
 coc_population_2024_df <- read.csv("data/output_2024/coc_population.csv")
 
-cocs_2024 <- cocs_2024 |>
+coc_population_2024_df <- cocs_2024 |>
   inner_join(coc_population_2024_df, by = join_by(COCNUM == coc_number)) |>
-  mutate(HomelessPer100K = ifelse(is.na(total_population), NA, (Overall.Homeless / total_population)*100000))
+  mutate(HomelessPer100K = (Overall.Homeless / total_population)*100000)
 
 ```
 
 ```{r message = FALSE, warning=FALSE}
-cuts_24 <- as.integer(quantile(cocs_2024$HomelessPer100K, probs = seq(0,1,(1/6)), na.rm = TRUE))
-
-zoomLevel <- 4
-
-pal_24 <- colorBin(palette = "Blues", domain = cocs_2024$HomelessPer100K, bins = cuts_24)
-
-leaflet(cocs_2024, options = leafletOptions(zoomControl = FALSE, minZoom = zoomLevel, maxZoom = zoomLevel)) |>
-  setMaxBounds(lng1 = -125.0011, lat1 = 24.9493, lng2 = -66.9326, lat2 = 49.5904) |>
-  addProviderTiles("Esri.WorldStreetMap") |>
-  addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1, color = ~pal_24(HomelessPer100K)) |>
-  addLegend("bottomright", pal = pal_24, values = ~HomelessPer100K,
-    title = "PIT Count per 100k",
-    opacity = 1
-  )
+# cuts_24 <- as.integer(quantile(coc_population_2024_df$HomelessPer100K, probs = seq(0,1,(1/6)), na.rm = TRUE))
+# 
+# zoomLevel <- 4
+# 
+# pal_24 <- colorBin(palette = "Blues", domain = coc_population_2024_df$HomelessPer100K, bins = cuts_24)
+# 
+# leaflet(coc_population_2024_df, options = leafletOptions(zoomControl = FALSE, minZoom = zoomLevel, maxZoom = zoomLevel)) |>
+#   setMaxBounds(lng1 = -125.0011, lat1 = 24.9493, lng2 = -66.9326, lat2 = 49.5904) |>
+#   addProviderTiles("Esri.WorldStreetMap") |>
+#   addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1, color = ~pal_24(HomelessPer100K)) |>
+#   addLegend("bottomright", pal = pal_24, values = ~HomelessPer100K,
+#     title = "PIT Count per 100k",
+#     opacity = 1
+#   )
 
 ```
 
+![PIT Counts per 100k Population, 2024](images/pit_count_per_100k_2024.jpg)
 
 ```{r}
-## TODO: Choropleth showing pct change in homeless levels between 2017 and 2024
-
-coc_gdb <- read_sf("data/output/coc_pop.gdb", "CoC_pop")
-
-cuts_change <- as.integer(quantile(coc_gdb$prop_unsheltered_homeless_change_pct, probs = seq(0,1,(1/6)), na.rm = TRUE))
-
-zoomLevel <- 4
-
-pal_change <- colorBin(palette = "Blues", domain = coc_gdb$HomelessPer100K, bins = cuts_change)
-
-leaflet(coc_gdb, options = leafletOptions(zoomControl = FALSE, minZoom = zoomLevel, maxZoom = zoomLevel)) |>
-  setMaxBounds(lng1 = -125.0011, lat1 = 24.9493, lng2 = -66.9326, lat2 = 49.5904) |>
-  addProviderTiles("Esri.WorldStreetMap") |>
-  addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1, color = ~pal_change(prop_unsheltered_homeless_change_pct)) |>
-  addLegend("bottomright", pal = pal, values = ~prop_unsheltered_homeless_change_pct,
-    title = "% Change in PIT Count per 100k",
-    opacity = 1
-  )
+# coc_gdb <- read_sf("data/output/coc_pop.gdb", "CoC_pop")
+# 
+# coc_gdb <- st_transform(coc_gdb, 4326)
+# 
+# cuts_change <- as.integer(quantile(coc_gdb$prop_unsheltered_homeless_change_pct, probs = seq(0,1,(1/6)), na.rm = TRUE))
+# 
+# zoomLevel <- 4
+# 
+# pal_change <- colorBin(palette = "plasma", domain = coc_gdb$HomelessPer100K, bins = cuts_change)
+# 
+# leaflet(coc_gdb, options = leafletOptions(zoomControl = FALSE, minZoom = zoomLevel, maxZoom = zoomLevel)) |>
+#   setMaxBounds(lng1 = -125.0011, lat1 = 24.9493, lng2 = -66.9326, lat2 = 49.5904) |>
+#   addProviderTiles("Esri.WorldStreetMap") |>
+#   addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = 1, color = ~pal_change(prop_unsheltered_homeless_change_pct)) |>
+#   addLegend("bottomright", pal = pal_change, values = ~prop_unsheltered_homeless_change_pct,
+#     title = "% Change in PIT Count per 100k",
+#     opacity = 1
+#   )
 
 ```
 
-
-
+![% Change in PIT Counts per 100k, 2017-2024](images/pit_count_per_100k__pct_change.jpg)
